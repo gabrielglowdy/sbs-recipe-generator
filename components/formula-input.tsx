@@ -70,7 +70,7 @@ export function FormulaInput({
         <div className="absolute inset-y-0 right-0 flex items-center">
           <Popover>
             <PopoverTrigger asChild>
-              <Button type="button" variant="ghost" size="icon" className="h-full aspect-square rounded-l-none mr-8">
+              <Button type="button" variant="ghost" size="icon" className="h-full aspect-square rounded-l-none mr-0">
                 <HelpCircle className="h-4 w-4" />
               </Button>
             </PopoverTrigger>

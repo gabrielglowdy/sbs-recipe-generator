@@ -139,7 +139,7 @@ export default function NewRecipePage() {
 
   return (
     <div className="container mx-auto py-10 px-4">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <div className="mb-6 flex justify-between items-center">
           <Link href="/" className="flex items-center text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="mr-1 h-4 w-4" />
@@ -322,47 +322,9 @@ export default function NewRecipePage() {
                 </div>
 
                 {ingredients.map((ingredient, index) => (
-                  <div key={index} className="grid grid-cols-12 gap-3 items-end">
-                    <div className="col-span-3">
-                      <Label htmlFor={`ingredient-${index}`} className="text-xs">
-                        Name
-                      </Label>
-                      <Input
-                        id={`ingredient-${index}`}
-                        placeholder="e.g. Red Compound"
-                        value={ingredient.name}
-                        onChange={(e) => updateIngredient(index, "name", e.target.value)}
-                        required
-                        disabled={
-                          ingredient.recipeId !== undefined &&
-                          ingredient.recipeId !== "" &&
-                          ingredient.recipeId !== "none"
-                        }
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <Label htmlFor={`weightType-${index}`} className="text-xs">
-                        Weight Type
-                      </Label>
-                      <Select
-                        value={ingredient.weightType}
-                        onValueChange={(value: "fixed" | "percentage" | "combined") =>
-                          updateIngredient(index, "weightType", value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="fixed">Fixed</SelectItem>
-                          <SelectItem value="percentage">Percentage</SelectItem>
-                          <SelectItem value="combined">Combined</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
+                  <div key={index} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3 items-end">
                     {/* Recipe Reference Dropdown */}
-                    <div className="col-span-3">
+                    <div className="col-span-12 lg:col-span-3">
                       <Label htmlFor={`recipeRef-${index}`} className="text-xs">
                         Recipe Reference
                       </Label>
@@ -384,29 +346,70 @@ export default function NewRecipePage() {
                       </Select>
                     </div>
 
-                    {/* Weight Input - Show for fixed and combined types */}
-                    {(ingredient.weightType === "fixed" || ingredient.weightType === "combined") &&
-                      (!ingredient.recipeId || ingredient.recipeId === "none") && (
-                        <div className="col-span-3">
-                          <Label htmlFor={`weight-${index}`} className="text-xs">
-                            Weight (g)
-                          </Label>
-                          <Input
-                            id={`weight-${index}`}
-                            type="number"
-                            step="0.01"
-                            min="0.01"
-                            placeholder="0.00"
-                            value={ingredient.weight || ""}
-                            onChange={(e) => updateIngredient(index, "weight", e.target.value)}
-                            required={ingredient.weightType === "fixed"}
-                          />
-                        </div>
-                      )}
+                    <div className="col-span-12 md:col-span-3">
+                      <Label htmlFor={`ingredient-${index}`} className="text-xs">
+                        Name
+                      </Label>
+                      <Input
+                        id={`ingredient-${index}`}
+                        placeholder="e.g. Red Compound"
+                        value={ingredient.name}
+                        onChange={(e) => updateIngredient(index, "name", e.target.value)}
+                        required
+                        disabled={
+                          ingredient.recipeId !== undefined &&
+                          ingredient.recipeId !== "" &&
+                          ingredient.recipeId !== "none"
+                        }
+                      />
+                    </div>
 
-                    {/* Percentage Input - Show for percentage type */}
+                    {/* Weight Type Dropdown */}
+                    <div className="col-span-12 md:col-span-2">
+                      <Label htmlFor={`weightType-${index}`} className="text-xs">
+                        Weight Type
+                      </Label>
+                      <Select
+                                     disabled={
+                          ingredient.recipeId !== undefined &&
+                          ingredient.recipeId !== "" &&
+                          ingredient.recipeId !== "none"
+                        }
+           value={ingredient.weightType}
+                        onValueChange={(value) => updateIngredient(index, "weightType", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select weight type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="fixed">Fixed</SelectItem>
+                          <SelectItem value="percentage">Percentage</SelectItem>
+                          <SelectItem value="combined">Combined</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Weight Input - Show for Fixed */}
+                    {(ingredient.weightType === "fixed") && (
+                      <div className="col-span-12 md:col-span-2">
+                        <Label htmlFor={`weight-${index}`} className="text-xs">
+                          Weight (g)
+                        </Label>
+                        <Input
+                          id={`weight-${index}`}
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          placeholder="0.00"
+                          value={ingredient.weight || ""}
+                          onChange={(e) => updateIngredient(index, "weight", e.target.value)}
+                        />
+                      </div>
+                    )}
+
+                    {/* Percentage Input - Show for Percentage */}
                     {ingredient.weightType === "percentage" && (
-                      <div className="col-span-3">
+                      <div className="col-span-12 md:col-span-2">
                         <Label htmlFor={`percentage-${index}`} className="text-xs">
                           Percentage (%)
                         </Label>
@@ -418,27 +421,25 @@ export default function NewRecipePage() {
                           placeholder="0.00"
                           value={ingredient.percentage || ""}
                           onChange={(e) => updateIngredient(index, "percentage", e.target.value)}
-                          required
                         />
                       </div>
                     )}
 
-                    {/* Formula Input - Show for combined type */}
-                    {ingredient.weightType === "combined" &&
-                      (!ingredient.recipeId || ingredient.recipeId === "none") && (
-                        <div className="col-span-3">
-                          <Label htmlFor={`formula-${index}`} className="text-xs">
-                            Formula
-                          </Label>
-                          <FormulaInput
-                            value={ingredient.formula || ""}
-                            onChange={(value) => updateIngredient(index, "formula", value)}
-                            placeholder="e.g. x * 0.5 or x^2/100"
-                          />
-                        </div>
-                      )}
+                    {/* Formula Input - Show for Combined */}
+                    {ingredient.weightType === "combined" && (
+                      <div className="col-span-12 md:col-span-3">
+                        <Label htmlFor={`formula-${index}`} className="text-xs">
+                          Formula
+                        </Label>
+                        <FormulaInput
+                          value={ingredient.formula || ""}
+                          onChange={(value) => updateIngredient(index, "formula", value)}
+                          placeholder="e.g. x * 0.5 or x^2/100"
+                        />
+                      </div>
+                    )}
 
-                    <div className="col-span-1 flex justify-end">
+                    <div className="col-span-12 md:col-span-1 flex justify-end">
                       <Button
                         type="button"
                         variant="ghost"
