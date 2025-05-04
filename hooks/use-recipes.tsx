@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { toast } from "react-hot-toast"
 
 // Define the Recipe type
 export interface Ingredient {
@@ -323,7 +324,7 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
     // Create a new window for printing
     const printWindow = window.open("", "_blank")
     if (!printWindow) {
-      alert("Please allow pop-ups to print recipes")
+      toast.error("Please allow pop-ups to print recipes")
       return
     }
 

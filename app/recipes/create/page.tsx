@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog"
 import { IngredientsList } from "@/components/ingredients-list"
 import GeneralLayout from "@/components/general-layout"
+import { toast } from "react-hot-toast"
 
 export default function NewRecipePage() {
   const router = useRouter()
@@ -106,7 +107,7 @@ export default function NewRecipePage() {
 
     // Validate form
     if (!productCode || !category || ingredients.some((i) => !i.name)) {
-      alert("Please fill all required fields")
+      toast.error("Please fill all required fields")
       return
     }
 

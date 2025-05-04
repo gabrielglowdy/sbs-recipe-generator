@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { toast } from "react-hot-toast"
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
@@ -120,7 +121,7 @@ export default function EditRecipePage() {
   const saveWithVersion = () => {
     // Validate form
     if (!productCode || !category || ingredients.some((i) => !i.name)) {
-      alert("Please fill all required fields")
+      toast.error("Please fill all required fields")
       return
     }
 
