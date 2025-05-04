@@ -10,6 +10,8 @@ export interface Ingredient {
   percentage?: number
   formula?: string
   recipeId?: string // Reference to another recipe
+  unit?: string // Optional unit for fixed weights
+  // e.g., "g", "kg", "oz", "lb"
 }
 
 export interface VersionData {

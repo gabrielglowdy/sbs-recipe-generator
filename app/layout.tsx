@@ -22,7 +22,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <Providers>
-            <main className="min-h-screen bg-background">{children}</main>
+            <main className="min-h-screen bg-[#FAFAFA]">{children}</main>
           </Providers>
         </ThemeProvider>
       </body>
