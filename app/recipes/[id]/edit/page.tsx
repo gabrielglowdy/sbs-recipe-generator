@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Plus, Save, Trash2 } from "lucide-react"
 import Link from "next/link"
-import { useRecipes } from "@/hooks/use-recipes"
+import { Ingredient, useRecipes } from "@/hooks/use-recipes"
 import {
   Dialog,
   DialogContent,
@@ -38,7 +38,7 @@ export default function EditRecipePage() {
   const [productCode, setProductCode] = useState("")
   const [category, setCategory] = useState("")
   const [description, setDescription] = useState("")
-  const [ingredients, setIngredients] = useState<any[]>([])
+  const [ingredients, setIngredients] = useState<Ingredient[]>([])
   const [versionNotes, setVersionNotes] = useState("")
   const [isVersionDialogOpen, setIsVersionDialogOpen] = useState(false)
 
@@ -82,15 +82,18 @@ export default function EditRecipePage() {
       if (value === "fixed") {
         delete newIngredients[index].percentage
         delete newIngredients[index].formula
-        delete newIngredients[index].recipeId
+        if (!newIngredients[index].weight) {
+          newIngredients[index].weight = 0
+        }
       } else if (value === "percentage") {
         delete newIngredients[index].formula
-        delete newIngredients[index].recipeId
+        delete newIngredients[index].weight
         if (!newIngredients[index].percentage) {
           newIngredients[index].percentage = 0
         }
       } else if (value === "combined") {
         delete newIngredients[index].percentage
+        delete newIngredients[index].weight
         if (!newIngredients[index].formula) {
           newIngredients[index].formula = ""
         }
@@ -160,101 +163,101 @@ export default function EditRecipePage() {
 
   return (
     <GeneralLayout>
-        <div className="mb-6 flex justify-between items-center">
-          <Link
-            href={`/recipes/${recipe.id}`}
-            className="flex items-center text-sm text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Back to recipe
-          </Link>
-          <FormulaReference />
-        </div>
+      <div className="mb-6 flex justify-between items-center">
+        <Link
+          href={`/recipes/${recipe.id}`}
+          className="flex items-center text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="mr-1 h-4 w-4" />
+          Back to recipe
+        </Link>
+        <FormulaReference />
+      </div>
 
-        <form onSubmit={handleSubmit}>
-          <Card>
-            <CardHeader>
-              <CardTitle>Edit Recipe</CardTitle>
-              <CardDescription>Edit your thermoplastic compound recipe and save as a new version</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="productCode">Product Code *</Label>
-                  <Input
-                    id="productCode"
-                    placeholder="e.g. A212"
-                    value={productCode}
-                    onChange={(e) => setProductCode(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category *</Label>
-                  <Select value={category} onValueChange={setCategory} required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Automotive">Automotive</SelectItem>
-                      <SelectItem value="Consumer">Consumer</SelectItem>
-                      <SelectItem value="Industrial">Industrial</SelectItem>
-                      <SelectItem value="Medical">Medical</SelectItem>
-                      <SelectItem value="Prototype">Prototype</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
+      <form onSubmit={handleSubmit}>
+        <Card>
+          <CardHeader>
+            <CardTitle>Edit Recipe</CardTitle>
+            <CardDescription>Edit your thermoplastic compound recipe and save as a new version</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="productCode">Product Code *</Label>
                 <Input
-                  id="description"
-                  placeholder="Brief description of the compound"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  id="productCode"
+                  placeholder="e.g. A212"
+                  value={productCode}
+                  onChange={(e) => setProductCode(e.target.value)}
+                  required
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="category">Category *</Label>
+                <Select value={category} onValueChange={setCategory} required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Automotive">Automotive</SelectItem>
+                    <SelectItem value="Consumer">Consumer</SelectItem>
+                    <SelectItem value="Industrial">Industrial</SelectItem>
+                    <SelectItem value="Medical">Medical</SelectItem>
+                    <SelectItem value="Prototype">Prototype</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
-              <IngredientsList
-                ingredients={ingredients}
-                recipes={availableRecipes}
-                onAddIngredient={addIngredient}
-                onRemoveIngredient={removeIngredient}
-                onUpdateIngredient={updateIngredient}
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                placeholder="Brief description of the compound"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
               />
-            </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button type="submit">
-                <Save className="mr-2 h-4 w-4" />
-                Save Changes
-              </Button>
-            </CardFooter>
-          </Card>
-        </form>
+            </div>
 
-        <Dialog open={isVersionDialogOpen} onOpenChange={setIsVersionDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Save New Version</DialogTitle>
-              <DialogDescription>
-                You're creating a new version of this recipe. Please add version notes to track changes.
-              </DialogDescription>
-            </DialogHeader>
-            <Textarea
-              placeholder="Describe what changes you made in this version..."
-              value={versionNotes}
-              onChange={(e) => setVersionNotes(e.target.value)}
-              className="min-h-[100px]"
+            <IngredientsList
+              ingredients={ingredients}
+              recipes={availableRecipes}
+              onAddIngredient={addIngredient}
+              onRemoveIngredient={removeIngredient}
+              onUpdateIngredient={updateIngredient}
             />
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsVersionDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={saveWithVersion}>Save New Version</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          </CardContent>
+          <CardFooter className="flex justify-end">
+            <Button type="submit">
+              <Save className="mr-2 h-4 w-4" />
+              Save Changes
+            </Button>
+          </CardFooter>
+        </Card>
+      </form>
+
+      <Dialog open={isVersionDialogOpen} onOpenChange={setIsVersionDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Save New Version</DialogTitle>
+            <DialogDescription>
+              You're creating a new version of this recipe. Please add version notes to track changes.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="Describe what changes you made in this version..."
+            value={versionNotes}
+            onChange={(e) => setVersionNotes(e.target.value)}
+            className="min-h-[100px]"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsVersionDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveWithVersion}>Save New Version</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </GeneralLayout>
   );
 }

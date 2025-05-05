@@ -71,15 +71,18 @@ export default function NewRecipePage() {
       if (value === "fixed") {
         delete newIngredients[index].percentage
         delete newIngredients[index].formula
-        delete newIngredients[index].recipeId
+        if (!newIngredients[index].weight) {
+          newIngredients[index].weight = 0
+        }
       } else if (value === "percentage") {
         delete newIngredients[index].formula
-        delete newIngredients[index].recipeId
+        delete newIngredients[index].weight
         if (!newIngredients[index].percentage) {
           newIngredients[index].percentage = 0
         }
       } else if (value === "combined") {
         delete newIngredients[index].percentage
+        delete newIngredients[index].weight
         if (!newIngredients[index].formula) {
           newIngredients[index].formula = ""
         }

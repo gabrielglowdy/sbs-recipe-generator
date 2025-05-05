@@ -6,7 +6,7 @@ import { toast } from "react-hot-toast"
 // Define the Recipe type
 export interface Ingredient {
   name: string
-  weight: number
+  weight?: number
   weightType: "fixed" | "percentage" | "combined"
   percentage?: number
   formula?: string
@@ -304,14 +304,11 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
 
     return recipe.ingredients.reduce((sum, ingredient) => {
       if (ingredient.recipeId && ingredient.recipeId !== "none") {
-        // If the ingredient references another recipe, calculate its weight
         return sum + calculateRecipeWeight(ingredient.recipeId)
       } else if (ingredient.weightType === "combined" && ingredient.formula) {
-        // If the ingredient has a formula, evaluate it
         return sum + evaluateFormula(ingredient.formula)
       } else {
-        // Otherwise, use the ingredient's weight
-        return sum + ingredient.weight
+        return sum + (ingredient.weight || 0) // Ensure weight is not undefined
       }
     }, 0)
   }
@@ -321,15 +318,14 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
     const recipe = recipes.find((r) => r.id === recipeId)
     if (!recipe) return
 
+    const totalWeight = recipe.ingredients.reduce((sum, i) => sum + (i.weight || 0), 0) // Ensure weight is not undefined
+
     // Create a new window for printing
     const printWindow = window.open("", "_blank")
     if (!printWindow) {
       toast.error("Please allow pop-ups to print recipes")
       return
     }
-
-    // Calculate total weight
-    const totalWeight = recipe.ingredients.reduce((sum, i) => sum + i.weight, 0)
 
     // Generate HTML content for printing
     const content = `
@@ -447,8 +443,8 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
                         ? "Recipe Reference"
                         : ""
                 }</td>
-                <td>${ingredient.weight.toFixed(2)}</td>
-                <td>${((ingredient.weight / totalWeight) * 100).toFixed(2)}%</td>
+                <td>${(ingredient.weight || 0).toFixed(2)}</td> <!-- Ensure weight is not undefined -->
+                <td>${(((ingredient.weight || 0) / totalWeight) * 100).toFixed(2)}%</td> <!-- Ensure weight is not undefined -->
               </tr>
             `,
               )

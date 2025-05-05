@@ -5,15 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2, Plus } from "lucide-react";
 import { FormulaInput } from "@/components/formula-input";
+import { Ingredient } from "@/hooks/use-recipes";
 
-type Ingredient = {
-  name: string;
-  weight: number;
-  weightType: "fixed" | "percentage" | "combined";
-  percentage?: number;
-  formula?: string;
-  recipeId?: string;
-};
 
 type IngredientsListProps = {
   ingredients: Ingredient[];
@@ -41,8 +34,8 @@ export const IngredientsList: React.FC<IngredientsListProps> = ({
       </div>
 
       {ingredients.map((ingredient, index) => (
-        <div key={index} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3 items-end">
-          <div className="col-span-12 md:col-span-6 lg:col-span-3">
+        <div key={index} className="flex flex-wrap gap-3 items-end">
+          <div className="flex-1 min-w-[200px]">
             <Label htmlFor={`recipeRef-${index}`} className="text-xs">
               Recipe Reference
             </Label>
@@ -64,7 +57,7 @@ export const IngredientsList: React.FC<IngredientsListProps> = ({
             </Select>
           </div>
 
-          <div className="col-span-12 md:col-span-6 lg:col-span-3">
+          <div className="flex-1 min-w-[200px]">
             <Label htmlFor={`ingredient-${index}`} className="text-xs">
               Name
             </Label>
@@ -82,7 +75,7 @@ export const IngredientsList: React.FC<IngredientsListProps> = ({
             />
           </div>
 
-          <div className="col-span-12 md:col-span-6 lg:col-span-2">
+          <div className="flex-1 min-w-[150px]">
             <Label htmlFor={`weightType-${index}`} className="text-xs">
               Weight Type
             </Label>
@@ -102,7 +95,7 @@ export const IngredientsList: React.FC<IngredientsListProps> = ({
           </div>
 
           {ingredient.weightType === "fixed" && (
-            <div className="col-span-11 md:col-span-5 lg:col-span-2">
+            <div className="flex-auto">
               <Label htmlFor={`weight-${index}`} className="text-xs">
                 Weight (g)
               </Label>
@@ -119,7 +112,7 @@ export const IngredientsList: React.FC<IngredientsListProps> = ({
           )}
 
           {ingredient.weightType === "percentage" && (
-            <div className="col-span-11 md:col-span-5 lg:col-span-2">
+            <div className="flex-auto">
               <Label htmlFor={`percentage-${index}`} className="text-xs">
                 Percentage (%)
               </Label>
@@ -136,7 +129,7 @@ export const IngredientsList: React.FC<IngredientsListProps> = ({
           )}
 
           {ingredient.weightType === "combined" && (
-            <div className="col-span-11 md:col-span-5 lg:col-span-3">
+            <div className="flex-auto">
               <Label htmlFor={`formula-${index}`} className="text-xs">
                 Formula
               </Label>
@@ -148,7 +141,7 @@ export const IngredientsList: React.FC<IngredientsListProps> = ({
             </div>
           )}
 
-          <div className="col-span-1 md:col-span-1 flex justify-end">
+          <div className="flex justify-end">
             <Button
               type="button"
               variant="ghost"
