@@ -38,7 +38,7 @@ export function RecipeList() {
       {filteredRecipes.length === 0 ? (
         <div className="text-center py-10">
           <p className="text-muted-foreground">No recipes found. Create your first recipe!</p>
-          <Link href="/recipes/new">
+          <Link href="/recipes/create">
             <Button className="mt-4">
               <PlusCircle className="mr-2 h-4 w-4" />
               New Recipe

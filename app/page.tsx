@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { PlusCircle, Search } from "lucide-react"
+import { PlusCircle, Search, UploadCloud } from "lucide-react"
 import { RecipeList } from "@/components/recipe-list"
 
 export default function Home() {
@@ -27,6 +27,12 @@ export default function Home() {
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" />
               New Recipe
+            </Button>
+          </Link>
+          <Link href="/recipes/upload">
+            <Button>
+              <UploadCloud className="mr-2 h-4 w-4" />
+              Upload Recipe
             </Button>
           </Link>
         </div>
