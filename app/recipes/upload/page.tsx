@@ -72,6 +72,7 @@ function buildTemplateWorkbook(withExample: boolean): XLSX.WorkBook {
     ["Field", "Value", "Notes"],
     ["productCode", withExample ? "A212" : "", "Required. e.g. A212"],
     ["category", withExample ? "Automotive" : "", "Required. Automotive | Consumer | Industrial | Medical | Prototype"],
+    ["createdBy", withExample ? "Rina" : "", "Optional"],
     ["customer", withExample ? "Northstar Materials" : "", "Optional"],
     ["description", withExample ? "High-temp automotive compound" : "", "Optional"],
     ["orderDate", withExample ? "2026-04-01" : "", "Optional. YYYY-MM-DD"],
@@ -153,7 +154,7 @@ function parseProductionNoteSheet(ws: XLSX.WorkSheet): ProductionNoteEntry[] {
 }
 
 type ParseResult = {
-  productCode: string; category: string; customer: string; description: string
+  productCode: string; category: string; createdBy: string; customer: string; description: string
   orderDate: string; productionDate: string; qtyOrderBatch: string; lotNumber: string
   colorName: string; gradeName: string; hardness: string; keterangan: string
   ingredients: Ingredient[]; colorings: Ingredient[]; productionNotes: ProductionNoteEntry[]
@@ -179,6 +180,7 @@ function parseWorkbook(wb: XLSX.WorkBook): ParseResult {
   const productionNotes = wsProd ? parseProductionNoteSheet(wsProd) : []
   return {
     productCode: info.productCode, category: info.category,
+    createdBy: info.createdBy ?? "",
     customer: info.customer ?? "", description: info.description ?? "",
     orderDate: info.orderDate ?? "", productionDate: info.productionDate ?? "",
     qtyOrderBatch: info.qtyOrderBatch ?? "", lotNumber: info.lotNumber ?? "",
@@ -198,6 +200,7 @@ export default function NewRecipeByUploadPage() {
   const [isParsing, setIsParsing] = useState(false)
   const [selectedProductId, setSelectedProductId] = useState("")
   const [selectedCustomerId, setSelectedCustomerId] = useState("")
+  const [creatorName, setCreatorName] = useState("")
   const [description, setDescription] = useState("")
   const [orderDate, setOrderDate] = useState("")
   const [productionDate, setProductionDate] = useState("")
@@ -226,6 +229,7 @@ export default function NewRecipeByUploadPage() {
       setSelectedProductId(matchedProduct ? matchedProduct.value : parsed.productCode)
       const matchedCustomer = customerOptions.find((o) => o.label.toLowerCase() === parsed.customer.toLowerCase())
       if (matchedCustomer) setSelectedCustomerId(matchedCustomer.value)
+      setCreatorName(parsed.createdBy)
       setDescription(parsed.description)
       setOrderDate(parsed.orderDate)
       setProductionDate(parsed.productionDate)
@@ -251,7 +255,7 @@ export default function NewRecipeByUploadPage() {
 
   const clearFile = () => {
     setUploadedFileName(null)
-    setSelectedProductId(""); setSelectedCustomerId(""); setDescription("")
+    setSelectedProductId(""); setSelectedCustomerId(""); setCreatorName(""); setDescription("")
     setOrderDate(""); setProductionDate(""); setQtyOrderBatch(""); setLotNumber("")
     setColorName(""); setGradeName(""); setHardness(""); setKeterangan("")
     setIngredients([emptyIngredient()]); setColorings([emptyIngredient()]); setProductionNotes([])
@@ -299,6 +303,9 @@ export default function NewRecipeByUploadPage() {
     const recipeId = Date.now().toString()
     const newRecipe = {
       id: recipeId, productCode: selectedProduct.productCode, category: selectedProduct.category,
+      productUsed: selectedProduct.productCode,
+      createdBy: creatorName || undefined,
+      customerSpecific: selectedCustomer?.label || undefined,
       description, orderDate: orderDate || undefined, productionDate: productionDate || undefined,
       qtyOrderBatch: qtyOrderBatch ? Number.parseFloat(qtyOrderBatch) : undefined,
       lotNumber: lotNumber || undefined, colorName: colorName || undefined,
@@ -407,6 +414,10 @@ export default function NewRecipeByUploadPage() {
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Input id="description" placeholder="Brief description of the compound" value={description} onChange={(e) => setDescription(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="creatorName">User Creator</Label>
+              <Input id="creatorName" placeholder="e.g. Rina" value={creatorName} onChange={(e) => setCreatorName(e.target.value)} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <div className="space-y-2"><Label htmlFor="orderDate">Order Date</Label><Input id="orderDate" type="date" value={orderDate} onChange={(e) => setOrderDate(e.target.value)} /></div>

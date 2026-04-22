@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,7 +19,7 @@ export function WeightCalculator({ ingredients, onWeightsCalculated }: WeightCal
   const { recipes, evaluateFormula, calculateRecipeWeight, getSupportedFunctions } = useRecipes()
   const [batchSize, setBatchSize] = useState<number>(() => {
     // Calculate initial batch size from fixed weights
-    return ingredients.reduce((sum, i) => sum + (i.weightType === "fixed" ? i.weight : 0), 0)
+    return ingredients.reduce((sum, i) => sum + (i.weightType === "fixed" ? (i.weight ?? 0) : 0), 0)
   })
 
   const [calculatedIngredients, setCalculatedIngredients] = useState<Ingredient[]>(ingredients)
@@ -32,16 +32,26 @@ export function WeightCalculator({ ingredients, onWeightsCalculated }: WeightCal
   }
 
   // Calculate total weight and percentages
-  const calculateWeights = () => {
+  const calculateWeights = useCallback(() => {
     // Create a copy of ingredients to work with
     const newIngredients = [...ingredients]
     const newFormulaErrors: Record<number, string> = {}
 
     // Calculate weights for all ingredients
     newIngredients.forEach((ingredient, index) => {
-      if (ingredient.weightType === "fixed") {
-        // Fixed weights remain unchanged
-      } else if (ingredient.weightType === "percentage" && ingredient.percentage) {
+      if (ingredient.recipeId && ingredient.recipeId !== "none") {
+        // Recipe references should override any local weight fields.
+        const referencedRecipeWeight = calculateRecipeWeight(ingredient.recipeId)
+        newIngredients[index] = {
+          ...ingredient,
+          weight: referencedRecipeWeight,
+        }
+      } else if (ingredient.weightType === "fixed") {
+        newIngredients[index] = {
+          ...ingredient,
+          weight: ingredient.weight ?? 0,
+        }
+      } else if (ingredient.weightType === "percentage" && ingredient.percentage !== undefined) {
         // Calculate weight based on percentage of batch size
         newIngredients[index] = {
           ...ingredient,
@@ -64,12 +74,10 @@ export function WeightCalculator({ ingredients, onWeightsCalculated }: WeightCal
             newFormulaErrors[index] = "Invalid formula"
           }
         }
-      } else if (ingredient.recipeId && ingredient.recipeId !== "none") {
-        // If this is a reference to another recipe, calculate its weight
-        const referencedRecipeWeight = calculateRecipeWeight(ingredient.recipeId)
+      } else {
         newIngredients[index] = {
           ...ingredient,
-          weight: referencedRecipeWeight,
+          weight: ingredient.weight ?? 0,
         }
       }
     })
@@ -80,15 +88,15 @@ export function WeightCalculator({ ingredients, onWeightsCalculated }: WeightCal
     if (onWeightsCalculated) {
       onWeightsCalculated(newIngredients)
     }
-  }
+  }, [ingredients, batchSize, calculateRecipeWeight, evaluateFormula, onWeightsCalculated])
 
   // Recalculate when batch size changes
   useEffect(() => {
     calculateWeights()
-  }, [batchSize])
+  }, [calculateWeights])
 
   // Calculate total weight
-  const totalWeight = calculatedIngredients.reduce((sum, i) => sum + i.weight, 0)
+  const totalWeight = calculatedIngredients.reduce((sum, i) => sum + (i.weight ?? 0), 0)
 
   // Get list of supported functions for the tooltip
   const supportedFunctions = getSupportedFunctions()
@@ -125,7 +133,7 @@ export function WeightCalculator({ ingredients, onWeightsCalculated }: WeightCal
         <CardDescription>Calculate ingredient weights based on batch size, percentages, and formulas</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="batch-size">Batch Size (g)</Label>
             <div className="flex space-x-2">
@@ -150,7 +158,7 @@ export function WeightCalculator({ ingredients, onWeightsCalculated }: WeightCal
           </div>
         </div>
 
-        <div className="overflow-x-auto mt-4">
+        <div className="hidden md:block overflow-x-auto mt-4">
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b">
@@ -192,7 +200,7 @@ export function WeightCalculator({ ingredients, onWeightsCalculated }: WeightCal
                   </td>
                   <td className="py-2 px-4">{ingredient.weight.toFixed(2)}</td>
                   <td className="py-2 px-4 text-right">
-                    {totalWeight > 0 ? ((ingredient.weight / totalWeight) * 100).toFixed(2) : "0.00"}%
+                    {totalWeight > 0 ? (((ingredient.weight ?? 0) / totalWeight) * 100).toFixed(2) : "0.00"}%
                   </td>
                 </tr>
               ))}
@@ -205,6 +213,29 @@ export function WeightCalculator({ ingredients, onWeightsCalculated }: WeightCal
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <div className="md:hidden space-y-3 mt-4">
+          {calculatedIngredients.map((ingredient, index) => (
+            <div key={index} className="rounded-lg border p-3 space-y-1.5">
+              <div className="flex items-start justify-between gap-3">
+                <p className="font-medium leading-tight">{ingredient.name}</p>
+                <p className="text-sm font-semibold">{(ingredient.weight ?? 0).toFixed(2)}g</p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {ingredient.weightType === "fixed"
+                  ? "Fixed"
+                  : ingredient.weightType === "percentage"
+                    ? `Percentage (${ingredient.percentage ?? 0}%)`
+                    : "Combined"}
+              </p>
+              {ingredient.formula ? <p className="text-xs font-mono break-all">{ingredient.formula}</p> : null}
+              <p className="text-xs text-muted-foreground">
+                Share: {totalWeight > 0 ? (((ingredient.weight ?? 0) / totalWeight) * 100).toFixed(2) : "0.00"}%
+              </p>
+              {formulaErrors[index] ? <p className="text-xs text-destructive">{formulaErrors[index]}</p> : null}
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>

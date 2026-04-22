@@ -119,6 +119,7 @@ export default function NewRecipePage() {
 
   const [selectedProductId, setSelectedProductId] = useState("")
   const [selectedCustomerId, setSelectedCustomerId] = useState("")
+  const [creatorName, setCreatorName] = useState("")
   const [description, setDescription] = useState("")
   const [ingredients, setIngredients] = useState<Ingredient[]>([
     {
@@ -298,7 +299,10 @@ export default function NewRecipePage() {
     const newRecipe = {
       id: recipeId,
       productCode: selectedProduct.productCode,
+      productUsed: selectedProduct.productCode,
       category: selectedProduct.category,
+      createdBy: creatorName || undefined,
+      customerSpecific: selectedCustomer.label,
       description,
       orderDate: orderDate || undefined,
       productionDate: productionDate || undefined,
@@ -525,6 +529,16 @@ export default function NewRecipePage() {
                 placeholder="Brief description of the compound"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="creatorName">User Creator</Label>
+              <Input
+                id="creatorName"
+                placeholder="e.g. Rina"
+                value={creatorName}
+                onChange={(e) => setCreatorName(e.target.value)}
               />
             </div>
 
