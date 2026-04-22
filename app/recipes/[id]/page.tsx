@@ -34,7 +34,7 @@ export default function RecipeDetailPage() {
     )
   }
 
-  const totalWeight = recipe.ingredients.reduce((sum, i) => sum + i.weight, 0)
+  const totalWeight = recipe.ingredients.reduce((sum, i) => sum + (i.weight || 0), 0)
 
   const handleDuplicate = () => {
     const newId = duplicateRecipe(recipe.id)
@@ -183,9 +183,9 @@ export default function RecipeDetailPage() {
                             )}
                             {ingredient.recipeId && ingredient.recipeId !== "none" && "Recipe Reference"}
                           </td>
-                          <td className="py-2 px-4">{ingredient.weight.toFixed(2)}</td>
+                          <td className="py-2 px-4">{(ingredient.weight ?? 0).toFixed(2)}</td>
                           <td className="py-2 px-4 text-right">
-                            {((ingredient.weight / totalWeight) * 100).toFixed(2)}%
+                            {(((ingredient.weight ?? 0) / totalWeight) * 100).toFixed(2)}%
                           </td>
                         </tr>
                       ))}

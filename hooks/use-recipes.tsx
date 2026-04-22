@@ -13,6 +13,7 @@ export interface Ingredient {
   recipeId?: string // Reference to another recipe
   unit?: string // Optional unit for fixed weights
   // e.g., "g", "kg", "oz", "lb"
+  adjust1?: string // Free-text adjustment note
 }
 
 export interface VersionData {
@@ -25,12 +26,45 @@ export interface VersionData {
   description?: string
 }
 
+export interface TestProperties {
+  ts?: number
+  el?: number
+  ab?: number
+  bj?: number
+}
+
+export interface ProductionResultNote {
+  id: string
+  recipeId: string
+  date?: string
+  shift?: string
+  lotNumber?: string
+  keterangan?: string
+  testProperties?: TestProperties
+  zakNote?: string
+  measurementNote?: string
+  mesinNote?: string
+  colorApproved?: boolean
+  signature?: string
+}
+
 export interface Recipe {
   id: string
   productCode: string
   category: string
   description?: string
+  // Order / production metadata
+  orderDate?: string
+  productionDate?: string
+  qtyOrderBatch?: number
+  lotNumber?: string
+  colorName?: string
+  gradeName?: string
+  hardness?: string
+  keterangan?: string
   ingredients: Ingredient[]
+  colorings?: Ingredient[]
+  productionResultNotes?: ProductionResultNote[]
   version: string
   createdAt: Date
   updatedAt: Date
