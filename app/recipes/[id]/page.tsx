@@ -17,7 +17,7 @@ import GeneralLayout from "@/components/general-layout"
 export default function RecipeDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { recipes, duplicateRecipe, evaluateFormula, printRecipe } = useRecipes()
+  const { recipes, duplicateRecipe, evaluateFormula, printRecipe, calculateRecipeWeight } = useRecipes()
   const [activeTab, setActiveTab] = useState("details")
 
   const recipeId = params.id as string
@@ -34,7 +34,10 @@ export default function RecipeDetailPage() {
     )
   }
 
-  const totalWeight = recipe.ingredients.reduce((sum, i) => sum + i.weight, 0)
+  const totalWeight = recipe.ingredients.reduce((sum, i) => sum + (i.weight ?? 0), 0)
+  const totalColoringWeight = (recipe.colorings ?? []).reduce((sum, i) => sum + (i.weight ?? 0), 0)
+  const fullMixWeight = totalWeight + totalColoringWeight
+  const batchReference = recipe.qtyOrderBatch ?? fullMixWeight
 
   const handleDuplicate = () => {
     const newId = duplicateRecipe(recipe.id)
@@ -51,6 +54,19 @@ export default function RecipeDetailPage() {
     return referencedRecipe ? referencedRecipe.productCode : "Unknown Recipe"
   }
 
+  const getIngredientWeight = (ingredient: { recipeId?: string; weight?: number }) => {
+    if (ingredient.recipeId && ingredient.recipeId !== "none") {
+      return calculateRecipeWeight(ingredient.recipeId)
+    }
+    return ingredient.weight ?? 0
+  }
+
+  const getIngredientTypeLabel = (type: "fixed" | "percentage" | "combined") => {
+    if (type === "fixed") return "Fixed"
+    if (type === "percentage") return "Percentage"
+    return "Combined"
+  }
+
   return (
     <GeneralLayout>
       <div className="mb-6">
@@ -63,7 +79,7 @@ export default function RecipeDetailPage() {
       <div className="flex flex-col gap-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-bold flex flex-wrap items-center gap-2">
               {recipe.productCode}
               <Badge>{recipe.category}</Badge>
             </h1>
@@ -72,17 +88,17 @@ export default function RecipeDetailPage() {
               Last updated on {formatDate(recipe.updatedAt)}
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handlePrint}>
+          <div className="grid grid-cols-1 sm:flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" onClick={handlePrint} className="w-full sm:w-auto">
               <Printer className="mr-2 h-4 w-4" />
               Print
             </Button>
-            <Button variant="outline" onClick={handleDuplicate}>
+            <Button variant="outline" onClick={handleDuplicate} className="w-full sm:w-auto">
               <Copy className="mr-2 h-4 w-4" />
               Duplicate
             </Button>
-            <Link href={`/recipes/${recipe.id}/edit`}>
-              <Button>
+            <Link href={`/recipes/${recipe.id}/edit`} className="w-full sm:w-auto">
+              <Button className="w-full sm:w-auto">
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
               </Button>
@@ -91,7 +107,7 @@ export default function RecipeDetailPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
+          <TabsList className="w-full justify-start overflow-x-auto">
             <TabsTrigger value="details">Recipe Details</TabsTrigger>
             <TabsTrigger value="calculator">
               <Calculator className="mr-1 h-4 w-4" />
@@ -109,7 +125,7 @@ export default function RecipeDetailPage() {
                 <CardDescription>{recipe.description || "No description provided"}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Version</p>
                     <p className="font-medium flex items-center">
@@ -119,7 +135,7 @@ export default function RecipeDetailPage() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Total Weight</p>
-                    <p className="font-medium">{totalWeight.toFixed(2)}g</p>
+                    <p className="font-medium">{fullMixWeight.toFixed(2)}g</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Created</p>
@@ -129,6 +145,60 @@ export default function RecipeDetailPage() {
                     <p className="text-sm text-muted-foreground">Ingredients</p>
                     <p className="font-medium">{recipe.ingredients.length}</p>
                   </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Colorings</p>
+                    <p className="font-medium">{recipe.colorings?.length ?? 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Product Used</p>
+                    <p className="font-medium">{recipe.productUsed || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Customer</p>
+                    <p className="font-medium">{recipe.customerSpecific || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Created By</p>
+                    <p className="font-medium">{recipe.createdBy || "-"}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Order Date</p>
+                    <p className="font-medium">{recipe.orderDate || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Production Date</p>
+                    <p className="font-medium">{recipe.productionDate || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Qty Order Batch</p>
+                    <p className="font-medium">
+                      {recipe.qtyOrderBatch !== undefined ? `${recipe.qtyOrderBatch.toFixed(2)}g` : "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">LOT Number</p>
+                    <p className="font-medium">{recipe.lotNumber || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Color Name</p>
+                    <p className="font-medium">{recipe.colorName || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Grade Name</p>
+                    <p className="font-medium">{recipe.gradeName || "-"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Hardness</p>
+                    <p className="font-medium">{recipe.hardness || "-"}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm text-muted-foreground">Keterangan</p>
+                  <p className="font-medium">{recipe.keterangan || "-"}</p>
                 </div>
               </CardContent>
             </Card>
@@ -138,7 +208,7 @@ export default function RecipeDetailPage() {
                 <CardTitle className="text-xl">Ingredients</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="border-b">
@@ -163,11 +233,7 @@ export default function RecipeDetailPage() {
                             )}
                           </td>
                           <td className="py-2 px-4">
-                            {ingredient.weightType === "fixed"
-                              ? "Fixed"
-                              : ingredient.weightType === "percentage"
-                                ? "Percentage"
-                                : "Combined"}
+                            {getIngredientTypeLabel(ingredient.weightType)}
                           </td>
                           <td className="py-2 px-4">
                             {ingredient.weightType === "percentage" && `${ingredient.percentage}% of batch size`}
@@ -175,17 +241,20 @@ export default function RecipeDetailPage() {
                               <div>
                                 <span className="font-mono text-sm">{ingredient.formula}</span>
                                 <div className="text-xs text-muted-foreground mt-1">
-                                  = {evaluateFormula(ingredient.formula, totalWeight).toFixed(2)}g
+                                  = {evaluateFormula(ingredient.formula, batchReference).toFixed(2)}g
                                   <br />
-                                  (x = batch size)
+                                  (x = batch size {batchReference.toFixed(2)}g)
                                 </div>
                               </div>
                             )}
                             {ingredient.recipeId && ingredient.recipeId !== "none" && "Recipe Reference"}
                           </td>
-                          <td className="py-2 px-4">{ingredient.weight.toFixed(2)}</td>
+                          <td className="py-2 px-4">{getIngredientWeight(ingredient).toFixed(2)}</td>
                           <td className="py-2 px-4 text-right">
-                            {((ingredient.weight / totalWeight) * 100).toFixed(2)}%
+                            {fullMixWeight > 0
+                              ? ((getIngredientWeight(ingredient) / fullMixWeight) * 100).toFixed(2)
+                              : "0.00"}
+                            %
                           </td>
                         </tr>
                       ))}
@@ -194,16 +263,103 @@ export default function RecipeDetailPage() {
                         <td className="py-2 px-4"></td>
                         <td className="py-2 px-4"></td>
                         <td className="py-2 px-4">{totalWeight.toFixed(2)}</td>
-                        <td className="py-2 px-4 text-right">100%</td>
+                        <td className="py-2 px-4 text-right">
+                          {fullMixWeight > 0 ? ((totalWeight / fullMixWeight) * 100).toFixed(2) : "0.00"}%
+                        </td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
+
+                <div className="md:hidden space-y-3">
+                  {recipe.ingredients.map((ingredient, index) => (
+                    <div key={index} className="rounded-lg border p-3 space-y-1.5">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="font-medium leading-tight">{ingredient.name}</p>
+                        <p className="text-sm font-semibold">{getIngredientWeight(ingredient).toFixed(2)}g</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{getIngredientTypeLabel(ingredient.weightType)}</p>
+                      {ingredient.recipeId && ingredient.recipeId !== "none" ? (
+                        <Link href={`/recipes/${ingredient.recipeId}`} className="text-xs text-blue-600 hover:underline">
+                          View {getRecipeName(ingredient.recipeId)} Recipe
+                        </Link>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Colorings</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {(recipe.colorings ?? []).length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No coloring entries.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {(recipe.colorings ?? []).map((coloring, index) => (
+                      <div key={index} className="rounded-lg border p-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-medium">{coloring.name}</p>
+                            <p className="text-xs text-muted-foreground">{getIngredientTypeLabel(coloring.weightType)}</p>
+                          </div>
+                          <p className="text-sm font-semibold">{getIngredientWeight(coloring).toFixed(2)}g</p>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="text-sm font-semibold text-right">Total: {totalColoringWeight.toFixed(2)}g</div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Production Result Notes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {(recipe.productionResultNotes ?? []).length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No production result notes.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {(recipe.productionResultNotes ?? []).map((note) => (
+                      <div key={note.id} className="rounded-lg border p-4 space-y-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                          <p><span className="text-muted-foreground">Date:</span> {note.date || "-"}</p>
+                          <p><span className="text-muted-foreground">Shift:</span> {note.shift || "-"}</p>
+                          <p><span className="text-muted-foreground">LOT:</span> {note.lotNumber || "-"}</p>
+                        </div>
+                        <p className="text-sm"><span className="text-muted-foreground">Keterangan:</span> {note.keterangan || "-"}</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                          <p><span className="text-muted-foreground">TS:</span> {note.testProperties?.ts ?? "-"}</p>
+                          <p><span className="text-muted-foreground">EL:</span> {note.testProperties?.el ?? "-"}</p>
+                          <p><span className="text-muted-foreground">AB:</span> {note.testProperties?.ab ?? "-"}</p>
+                          <p><span className="text-muted-foreground">BJ:</span> {note.testProperties?.bj ?? "-"}</p>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                          <p><span className="text-muted-foreground">ZAK Note:</span> {note.zakNote || "-"}</p>
+                          <p><span className="text-muted-foreground">Measurement Note:</span> {note.measurementNote || "-"}</p>
+                        </div>
+                        <p className="text-sm"><span className="text-muted-foreground">Mesin Note:</span> {note.mesinNote || "-"}</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                          <p>
+                            <span className="text-muted-foreground">Color Approved:</span>{" "}
+                            {note.colorApproved === undefined ? "-" : note.colorApproved ? "Yes" : "No"}
+                          </p>
+                          <p><span className="text-muted-foreground">Signature:</span> {note.signature || "-"}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
           <TabsContent value="calculator">
-            <WeightCalculator ingredients={recipe.ingredients} />
+            <WeightCalculator ingredients={[...recipe.ingredients, ...(recipe.colorings ?? [])]} />
           </TabsContent>
           <TabsContent value="versions">
             <VersionHistory recipeId={recipe.id} />

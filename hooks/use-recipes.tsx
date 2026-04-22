@@ -13,6 +13,7 @@ export interface Ingredient {
   recipeId?: string // Reference to another recipe
   unit?: string // Optional unit for fixed weights
   // e.g., "g", "kg", "oz", "lb"
+  adjust1?: string // Free-text adjustment note
 }
 
 export interface VersionData {
@@ -25,12 +26,48 @@ export interface VersionData {
   description?: string
 }
 
+export interface TestProperties {
+  ts?: number
+  el?: number
+  ab?: number
+  bj?: number
+}
+
+export interface ProductionResultNote {
+  id: string
+  recipeId: string
+  date?: string
+  shift?: string
+  lotNumber?: string
+  keterangan?: string
+  testProperties?: TestProperties
+  zakNote?: string
+  measurementNote?: string
+  mesinNote?: string
+  colorApproved?: boolean
+  signature?: string
+}
+
 export interface Recipe {
   id: string
   productCode: string
+  productUsed?: string
   category: string
+  createdBy?: string
+  customerSpecific?: string
   description?: string
+  // Order / production metadata
+  orderDate?: string
+  productionDate?: string
+  qtyOrderBatch?: number
+  lotNumber?: string
+  colorName?: string
+  gradeName?: string
+  hardness?: string
+  keterangan?: string
   ingredients: Ingredient[]
+  colorings?: Ingredient[]
+  productionResultNotes?: ProductionResultNote[]
   version: string
   createdAt: Date
   updatedAt: Date
@@ -42,7 +79,10 @@ const sampleRecipes: Recipe[] = [
   {
     id: "1",
     productCode: "A212",
+    productUsed: "A212",
     category: "Automotive",
+    createdBy: "Rina",
+    customerSpecific: "Northstar Materials",
     description: "High-temperature resistant compound for automotive applications",
     ingredients: [
       { name: "Red Compound", weight: 23, weightType: "fixed" },
@@ -57,7 +97,10 @@ const sampleRecipes: Recipe[] = [
   {
     id: "2",
     productCode: "C103",
+    productUsed: "C103",
     category: "Consumer",
+    createdBy: "Budi",
+    customerSpecific: "Atlas Polymers",
     description: "Flexible compound for consumer electronics",
     ingredients: [
       { name: "Blue Compound", weight: 15.5, weightType: "fixed" },
@@ -99,7 +142,10 @@ const sampleRecipes: Recipe[] = [
   {
     id: "3",
     productCode: "M501",
+    productUsed: "M501",
     category: "Medical",
+    createdBy: "Dewi",
+    customerSpecific: "Helios MedTech",
     description: "Medical grade compound with A212 base",
     ingredients: [
       { name: "A212 Base", weight: 30, weightType: "fixed", recipeId: "1" },
@@ -156,6 +202,7 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
       ...recipe,
       id: newId,
       productCode: `${recipe.productCode} (Copy)`,
+      productUsed: recipe.productCode,
       version: "1.0.0",
       createdAt: new Date(),
       updatedAt: new Date(),

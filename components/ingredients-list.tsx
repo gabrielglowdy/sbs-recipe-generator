@@ -14,6 +14,8 @@ type IngredientsListProps = {
   onAddIngredient: () => void;
   onRemoveIngredient: (index: number) => void;
   onUpdateIngredient: (index: number, field: string, value: string | number) => void;
+  listLabel?: string;
+  addButtonLabel?: string;
 };
 
 export const IngredientsList: React.FC<IngredientsListProps> = ({
@@ -22,14 +24,16 @@ export const IngredientsList: React.FC<IngredientsListProps> = ({
   onAddIngredient,
   onRemoveIngredient,
   onUpdateIngredient,
+  listLabel = "Ingredients",
+  addButtonLabel = "Add Ingredient",
 }) => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <Label>Ingredients *</Label>
+        <Label>{listLabel} *</Label>
         <Button type="button" variant="outline" size="sm" onClick={onAddIngredient}>
           <Plus className="mr-1 h-3 w-3" />
-          Add Ingredient
+          {addButtonLabel}
         </Button>
       </div>
 
@@ -140,6 +144,19 @@ export const IngredientsList: React.FC<IngredientsListProps> = ({
               />
             </div>
           )}
+
+          <div className="flex-auto min-w-[120px]">
+            <Label htmlFor={`adjust1-${index}`} className="text-xs">
+              Adjust 1
+            </Label>
+            <Input
+              id={`adjust1-${index}`}
+              type="text"
+              placeholder="Adjustment note"
+              value={ingredient.adjust1 || ""}
+              onChange={(e) => onUpdateIngredient(index, "adjust1", e.target.value)}
+            />
+          </div>
 
           <div className="flex justify-end">
             <Button
